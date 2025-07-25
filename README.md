@@ -48,7 +48,7 @@ A2I 的工作流程非常直观：
 -   **前端 (Frontend)**: `Flask` + `Bootstrap 5` + `Jinja2`
 -   **后端 (Backend)**: `Python 3.9+`
 -   **浏览器自动化 (Browser Automation)**: `Playwright`
--   **AI 大语言模型 (LLMs)**: 可插拔架构，默认支持 `GPT-4` / `Moonshot` / `Claude` 系列及其他兼容 OpenAI API 的模型。
+-   **AI 大语言模型 (LLMs)**: 目前只支持zhipu。
 
 ---
 
@@ -62,7 +62,7 @@ A2I 的工作流程非常直观：
 
 ```bash
 # 1. 克隆项目
-git clone https://github.com/your-name/uioperator.git
+git clone https://github.com/letmego2022/AI2UI-A2I.git
 cd uioperator
 
 # 2. 创建并激活虚拟环境 (推荐)
