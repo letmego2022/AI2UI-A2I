@@ -1,80 +1,131 @@
-# 🤖 A2I：基于 AI 的视觉 UI 自动化平台
+# 🤖 A2I: AI-Powered Visual UI Automation
 
-A2I 是一个基于视觉理解的 UI 自动化平台，结合 AI 能力与自动化执行技术，实现通过自然语言控制网页操作，特别适用于复杂页面的快速交互和自动化测试。
+[English](./README.en.md) | **简体中文**
 
----
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Python Version](https://img.shields.io/badge/python-3.9%2B-blue.svg)](https://www.python.org/downloads/)
+[![Stars](https://img.shields.io/github/stars/letmego2022/AI2UI-A2I?style=social)](https://github.com/letmego2022/AI2UI-A2I/stargazers)
+[![Issues](https://img.shields.io/github/issues/letmego2022/AI2UI-A2I)](https://github.com/letmego2022/AI2UI-A2I/issues)
 
-## ✨ 项目亮点
-
-- 🧠 **AI 驱动任务理解**：通过自然语言任务描述，自动推理出 UI 操作序列
-- 🖱️ **视觉识别+操作执行**：基于 Playwright 结合视觉标注技术精准执行
-- 🖼️ **截图 + 标注 + 回放**：每一步自动截图，高亮操作区域，支持可视化追踪
-- 📦 **模块化结构**：支持插件式识别引擎、操作生成器与执行器
-- 🔎 **对话式界面**：提供简洁直观的 GUI 输入框，可交互式输入任务描述
+**A2I 是一个基于视觉理解的 UI 自动化平台，它将大语言模型 (LLM) 的推理能力与稳健的浏览器自动化技术相结合，让你能通过自然语言指令完成复杂的网页操作与自动化测试。**
 
 ---
 
-## 📷 实时界面预览
+## 🎥 动态演示 (Live Demo)
 
-| 任务输入 | 多步执行流程追踪 | 视觉标注截图 |
-|----------|------------------|---------------|
-| <img width="1453" height="571" alt="image" src="https://github.com/user-attachments/assets/e7c3e29b-4b64-42d3-a1fa-8a0e724619e0" />
- | <img width="1252" height="600" alt="image" src="https://github.com/user-attachments/assets/07508f19-c1d3-4e5c-a782-c2504d2bb464" />
- | <img width="1269" height="764" alt="image" src="https://github.com/user-attachments/assets/7430f381-7aae-48e0-93a3-8f3e21e3e38f" />
- |
+眼见为实！点击下方查看 A2I 的实时操作演示，了解它如何将自然语言转化为精确的 UI 操作。
+
+[![A2I Demo Video](https://github.com/user-attachments/assets/e7c3e29b-4b64-42d3-a1fa-8a0e724619e0)](https://www.bilibili.com/video/BV1zD8MzLEFB/)
+*<p align="center">点击图片观看演示视频</p>*
 
 ---
 
-## 🔧 当前技术架构
+## ✨ 核心特性 (Features)
 
-- 前端：`Flask + Bootstrap5` 简洁 UI
-- 后端：`Python` 处理任务分发与截图处理
-- 执行引擎：`Playwright` 自动浏览器操作
-- 智能引擎：支持任意可替换的 LLM，例如 `GPT-4` / `Moonshot` / `Claude`
-
----
-
-## 🛣️ 开发路线图（Roadmap）
-
-- [x] GUI 可交互式任务输入框
-- [x] 截图+坐标标注系统
-- [x] AI 指令生成器（点击 / 输入 / 拖动）
-- [x] 多步执行追踪 + 缩略图展示
-- [ ] 📁 流程录制与回放功能
-- [ ] 🔄 支持任务编辑与重执行
-- [ ] 🧩 插件机制支持更多操作类型
-- [ ] 🌐 Docker 一键部署
+-   🧠 **智能指令解析 (Intelligent Instruction Parsing)**：基于 LLM 理解模糊的自然语言任务描述（如“帮我登录”、“搜索最新的 AI 新闻”），并自动推理出具体的操作步骤序列。
+-   👁️ **精准视觉定位 (Precise Visual Grounding)**：不依赖脆弱的 XPath/CSS 选择器，通过视觉模型在截图上直接定位操作元素（按钮、输入框等），极大提升了对动态页面的适应性。
+-   📸 **可视化操作追溯 (Visualized Action Traceability)**：每一步操作都会自动截图，并高亮标记当前操作的元素和区域。整个流程清晰可见，便于调试和验证。
+-   🧩 **模块化与可扩展 (Modular & Extensible)**：核心引擎、AI 模型和执行器均采用模块化设计，方便替换或扩展，你可以轻松接入不同的 LLM（GPT-4o, Claude 3, Moonshot 等）。
+-   💬 **交互式对话界面 (Interactive Chat Interface)**：提供简洁直观的 GUI，像聊天一样输入你的任务，即刻获得自动化执行结果。
 
 ---
 
-## 🤝 贡献指南
+## 🔧 工作原理 (How It Works)
 
-欢迎贡献者一同完善本项目：
+A2I 的工作流程非常直观：
+
+1.  **输入 (Input)**: 用户在前端界面输入一个高级指令（例如：“搜索 A2I 项目并进入它的 GitHub 页面”）。
+2.  **感知 (Perceive)**: 系统自动对当前浏览器页面进行截图。
+3.  **思考 (Think)**: 将用户指令和页面截图一同发送给大语言模型 (LLM)。
+4.  **规划 (Plan)**: LLM 分析视觉信息和指令，生成一个具体的操作指令（例如：`{ "action": "type", "text": "A2I github", "element_description": "搜索框" }`）。
+5.  **执行 (Act)**: 执行器（Playwright）根据指令在浏览器上执行相应的操作（如点击、输入、滚动）。
+6.  **循环 (Loop)**: 重复 2-5 步，直到完成用户指定的最终任务。
+
+---
+
+## 🛠️ 技术栈 (Tech Stack)
+
+-   **前端 (Frontend)**: `Flask` + `Bootstrap 5` + `Jinja2`
+-   **后端 (Backend)**: `Python 3.9+`
+-   **浏览器自动化 (Browser Automation)**: `Playwright`
+-   **AI 大语言模型 (LLMs)**: 可插拔架构，默认支持 `GPT-4` / `Moonshot` / `Claude` 系列及其他兼容 OpenAI API 的模型。
+
+---
+
+## 🚀 快速开始 (Getting Started)
+
+### 1. 环境准备
+
+-   确保你已安装 `Python 3.9+` 和 `Git`。
+
+### 2. 安装与配置
 
 ```bash
-# 克隆项目
+# 1. 克隆项目
 git clone https://github.com/your-name/uioperator.git
 cd uioperator
 
-# 安装依赖
+# 2. 创建并激活虚拟环境 (推荐)
+python -m venv venv
+source venv/bin/activate  # On Windows, use `venv\Scripts\activate`
+
+# 3. 安装依赖
 pip install -r requirements.txt
 
-# 启动服务
+# 4. 安装 Playwright 浏览器驱动
+playwright install
+
+# 5. 配置环境变量
+# 复制 .env.example 文件为 .env，并填入你的 API Key
+cp .env.example .env
+# 编辑 .env 文件
+# nano .env
+```
+**`.env` 文件内容示例:**
+```env
+# OPENAI_API_KEY="sk-..."
+MOONSHOT_API_KEY="your-moonshot-api-key"
+```
+
+### 3. 启动服务
+
+```bash
+# 启动 Flask 应用
 python app.py
-````
-
-如有建议、PR 或 Feature Request，请前往 [Issue 区](https://github.com/your-name/uioperator/issues)！
-
----
-
-## ⚡ 灵感来源
-
-本项目灵感来自 AI + UI 自动化结合场景，致力于推动“零代码自动操作”在实际工程中的落地应用。
+```
+现在，在浏览器中打开 `http://127.0.0.1:5000` 即可开始使用！
 
 ---
 
-## 📄 License
+## 🛣️ 路线图 (Roadmap)
 
-[MIT License](LICENSE)
+-   [x] GUI 可交互式任务输入框
+-   [x] 截图+坐标标注系统
+-   [x] AI 指令生成器（点击 / 输入 / 拖动）
+-   [x] 多步执行追踪 + 缩略图展示
+-   [ ] 📁 **流程录制与回放**: 记录用户操作序列并一键重放。
+-   [ ] 🔄 **任务编辑与重执行**: 支持在多步流程中修改某一步并从该点继续执行。
+-   [ ] 🧩 **插件化架构**: 引入插件系统以支持自定义操作（如 API 调用、数据检查）。
+-   [ ] 🌐 **Docker 一键部署**: 提供 Dockerfile，实现隔离环境的快速部署。
 
+---
 
+## 🤝 参与贡献 (Contributing)
+
+我们热烈欢迎各种形式的贡献！无论是提交 Issue、改进文档，还是贡献代码。
+
+请遵循标准的 **Fork & Pull Request** 流程：
+1.  **Fork** 本项目到你的仓库。
+2.  从 `main` 分支创建一个新的特性分支 (`git checkout -b feature/your-amazing-feature`)。
+3.  进行修改并提交 (`git commit -m 'feat: Add some amazing feature'`)。
+4.  将你的分支推送到你的 Fork 仓库 (`git push origin feature/your-amazing-feature`)。
+5.  创建一个 **Pull Request** 请求合并到本项目的 `main` 分支。
+
+如果你有任何建议或问题，请随时在 [Issue 区](https://github.com/letmego2022/AI2UI-A2I/issues)提出！
+
+---
+
+## 📄 许可证 (License)
+
+本项目基于 [MIT License](LICENSE) 开源。
+```
