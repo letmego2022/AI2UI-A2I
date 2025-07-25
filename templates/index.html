@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8" />
+  <title>AI2UI：A2I</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+  <style>
+    #main-image {
+      max-width: 100%;
+      border: 1px solid #ccc;
+      max-height: 70vh;
+      object-fit: contain;
+    }
+    #thumbnail-list {
+      max-height: 80vh;
+      overflow-y: auto;
+    }
+    .thumbnail-item {
+      cursor: pointer;
+      border: 2px solid transparent;
+      transition: border-color 0.2s;
+      max-width: 100%;
+      height: 80px;
+      object-fit: cover;
+    }
+    .thumbnail-item:hover {
+      border-color: #0d6efd;
+    }
+    .thumbnail-item.active {
+      border-color: #ffc107;
+    }
+    .status-message {
+      margin-bottom: 10px;
+    }
+    .control-buttons {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: end;
+    }
+    .url-input-group {
+      display: flex;
+      gap: 10px;
+      align-items: end;
+    }
+    .card-body p, .card-body li {
+      margin-bottom: 4px;
+      line-height: 1.3;
+    }
+
+  </style>
+</head>
+<body class="bg-light">
+  <div class="container py-4">
+    <h1 class="mb-4">🧠 AI2UI：A2I（AI → UI 自动化系统）</h1>
+
+    <!-- 📘 使用说明 -->
+    <div class="card mb-3 border-info p-2" style="font-size: 14px;">
+      <div class="card-body py-2 px-3">
+        <div class="row">
+          <!-- 左侧说明 -->
+          <div class="col-md-5 d-flex flex-column justify-content-center">
+            <h6 class="text-info mb-1">📘 使用说明</h6>
+            <p class="mb-0">系统通过 AI 分析截图并自动执行 UI 操作。</p>
+          </div>
+          <!-- 右侧功能点 -->
+          <div class="col-md-7">
+            <ul class="mb-0 ps-3">
+              <li><strong>支持自然语言输入</strong>，如：「点击登录按钮并输入密码」</li>
+              <li><strong>自动推理点击、输入、拖动</strong> 等操作</li>
+              <li><strong>多步任务执行</strong>，并自动截图追踪</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+
+    <!-- 浏览器控制区域 -->
+    <div class="card mb-4">
+      <div class="card-body">
+        <h5 class="card-title">🌐 浏览器控制</h5>
+        <div class="url-input-group mb-3">
+          <div class="flex-grow-1">
+            <label for="browser-url" class="form-label">请输入网站URL：</label>
+            <input
+              type="url"
+              class="form-control"
+              id="browser-url"
+              placeholder="例如：https://www.example.com"
+              value="https://cn.bing.com"
+            />
+          </div>
+          <div>
+            <label class="form-label">&nbsp;</label>
+            <div class="d-flex gap-2">
+              <button id="start-browser" class="btn btn-success">🚀 启动浏览器</button>
+              <button id="close-browser" class="btn btn-danger">⏹️ 关闭浏览器</button>
+            </div>
+          </div>
+        </div>
+        <div class="alert alert-info" id="browser-status">
+          <strong>浏览器状态：</strong>
+          <span id="status-text">未启动</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 任务执行区域 -->
+    <div class="card">
+      <div class="card-body">
+        <h5 class="card-title">🤖 AI任务执行</h5>
+        <form id="task-form" class="mb-3">
+          <div class="mb-3">
+            <label for="task" class="form-label">请输入任务描述：</label>
+            <input
+              type="text"
+              class="form-control"
+              id="task"
+              name="task"
+              placeholder="例如：点击搜索框，输入'AI自动化'，然后点击搜索按钮"
+              required
+            />
+          </div>
+          <button type="submit" class="btn btn-primary" id="start-btn" disabled>▶️ 开始执行任务</button>
+        </form>
+
+        <div class="row">
+          <!-- 左侧：主图展示区域 -->
+          <div class="col-md-9">
+            <h6>执行结果</h6>
+            <div id="main-display" class="mt-3 text-center">
+              <img id="main-image" src="" alt="主图展示" class="img-fluid" style="display:none;" />
+              <div id="main-status" class="text-muted">请先启动浏览器</div>
+            </div>
+          </div>
+
+          <!-- 右侧：缩略图导航 -->
+          <div class="col-md-3">
+            <h6>步骤导航</h6>
+            <div id="thumbnail-list" class="d-flex flex-column gap-2"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <footer class="text-center text-muted mt-4 mb-2 small">
+    AI2UI：A2I © 2025 - Powered by GPT 自动化引擎
+  </footer>
+  
+  <script>
+    // 初始化 SocketIO 连接
+    const socket = io();
+    
+    // DOM元素
+    const browserUrlInput = document.getElementById("browser-url");
+    const startBrowserBtn = document.getElementById("start-browser");
+    const closeBrowserBtn = document.getElementById("close-browser");
+    const taskForm = document.getElementById("task-form");
+    const startTaskBtn = document.getElementById("start-btn");
+    const mainImage = document.getElementById("main-image");
+    const mainStatus = document.getElementById("main-status");
+    const thumbnailList = document.getElementById("thumbnail-list");
+    const statusText = document.getElementById("status-text");
+
+    let currentThumbnails = [];
+    let activeThumbnail = null;
+
+    function showMainImage(src, statusText = '') {
+      mainImage.src = src;
+      mainImage.style.display = 'block';
+      mainStatus.textContent = statusText || '';
+    }
+
+    function addThumbnail(step, substep, imgSrc, msg, isActive = false) {
+      const thumbContainer = document.createElement("div");
+      thumbContainer.className = "position-relative";
+      
+      const thumb = document.createElement("img");
+      thumb.src = imgSrc;
+      thumb.alt = msg || `步骤 ${step} 子步骤 ${substep}`;
+      thumb.className = "thumbnail-item img-thumbnail";
+      thumb.dataset.src = imgSrc;
+      thumb.dataset.step = step;
+      thumb.dataset.substep = substep;
+
+      thumb.addEventListener("click", () => {
+        showMainImage(imgSrc, msg || `步骤 ${step} - 子步骤 ${substep}`);
+        document.querySelectorAll(".thumbnail-item").forEach(t => t.classList.remove("active"));
+        thumb.classList.add("active");
+        activeThumbnail = thumb;
+      });
+
+      thumbContainer.appendChild(thumb);
+      
+      const label = document.createElement("div");
+      label.className = "position-absolute top-0 start-0 bg-primary text-white px-1 small";
+      label.style.fontSize = "10px";
+      label.textContent = step && substep ? `${step}-${substep}` : '初始';
+      thumbContainer.appendChild(label);
+
+      thumbnailList.appendChild(thumbContainer);
+      currentThumbnails.push(thumb);
+
+      if (isActive || currentThumbnails.length === 1) {
+        showMainImage(imgSrc, msg);
+        document.querySelectorAll(".thumbnail-item").forEach(t => t.classList.remove("active"));
+        thumb.classList.add("active");
+        activeThumbnail = thumb;
+      }
+    }
+
+    function clearResults() {
+      mainImage.style.display = 'none';
+      mainStatus.textContent = "等待任务执行...";
+      thumbnailList.innerHTML = '';
+      currentThumbnails = [];
+      activeThumbnail = null;
+    }
+
+    function addStatusMessage(message, type = 'info') {
+      const alertDiv = document.createElement("div");
+      alertDiv.className = `alert alert-${type} status-message mb-1`;
+      alertDiv.textContent = message;
+      mainStatus.appendChild(alertDiv);
+      mainStatus.scrollTop = mainStatus.scrollHeight;
+    }
+
+    function updateBrowserStatus(status, type = 'secondary') {
+      statusText.textContent = status;
+      statusText.className = `alert-${type}`;
+    }
+
+    function enableTaskButton(enabled) {
+      startTaskBtn.disabled = !enabled;
+    }
+
+    // SocketIO 事件监听
+    socket.on('browser_started', function(data) {
+      updateBrowserStatus(`运行中 - ${data.url}`, 'success');
+      addStatusMessage(`✅ ${data.msg}`, 'success');
+      enableTaskButton(true);
+    });
+
+    socket.on('browser_error', function(data) {
+      updateBrowserStatus('启动失败', 'danger');
+      addStatusMessage(`❌ ${data.msg}`, 'danger');
+      enableTaskButton(false);
+    });
+
+    socket.on('browser_closed', function(data) {
+      updateBrowserStatus('已关闭', 'secondary');
+      addStatusMessage(`⏹️ ${data.msg}`, 'info');
+      enableTaskButton(false); // 确保任务按钮被禁用
+      clearResults();
+      mainStatus.textContent = "请先启动浏览器";
+      
+      // *** 关键修复：重新启用启动浏览器按钮 ***
+      // 当浏览器成功关闭后，用户应该能够再次启动它
+      startBrowserBtn.disabled = false; 
+    });
+
+    socket.on('browser_close_error', function(data) {
+      addStatusMessage(`❌ ${data.msg}`, 'danger');
+    });
+
+    socket.on('browser_status', function(data) {
+      updateBrowserStatus(data.status, data.type || 'secondary');
+      if (data.type === 'success') {
+        enableTaskButton(true);
+      } else {
+        enableTaskButton(false);
+      }
+    });
+
+    socket.on('screenshot_update', function(data) {
+      addThumbnail(
+        data.step || 0, 
+        data.substep || 0, 
+        data.img, 
+        data.msg || '截图更新',
+        true
+      );
+    });
+
+    socket.on('task_start', function(data) {
+      clearResults();
+      addStatusMessage(`▶️ ${data.msg}`, 'info');
+    });
+
+    socket.on('step_start', function(data) {
+      addStatusMessage(`▶️ 步骤 ${data.step} 开始执行`, 'info');
+    });
+
+    socket.on('task_done', function(data) {
+      addStatusMessage(`✅ ${data.msg}`, 'success');
+      startTaskBtn.disabled = false;
+    });
+
+    socket.on('task_warning', function(data) {
+      addStatusMessage(`⚠️ ${data.msg}`, 'warning');
+      startTaskBtn.disabled = false;
+    });
+
+    socket.on('task_error', function(data) {
+      addStatusMessage(`❌ ${data.msg}`, 'danger');
+      startTaskBtn.disabled = false;
+    });
+
+    // 同时，为了处理可能的启动失败情况，也更新 'browser_error' 监听器
+    socket.on('browser_error', function(data) {
+      updateBrowserStatus('启动失败', 'danger');
+      addStatusMessage(`❌ ${data.msg}`, 'danger');
+      enableTaskButton(false);
+      
+      // *** 关键修复：如果启动失败，也应该重新启用启动按钮，让用户可以重试 ***
+      startBrowserBtn.disabled = false; 
+    });
+
+    // 启动浏览器事件
+    startBrowserBtn.addEventListener("click", function() {
+      const url = browserUrlInput.value.trim();
+      if (!url) {
+        alert("请输入URL");
+        return;
+      }
+
+      startBrowserBtn.disabled = true;
+      socket.emit('start_browser', {url: url});
+    });
+
+    // 关闭浏览器事件
+    closeBrowserBtn.addEventListener("click", function() {
+      if (!confirm("确定要关闭浏览器吗？")) return;
+      socket.emit('close_browser');
+    });
+
+    // 执行任务事件
+    taskForm.addEventListener("submit", function(e) {
+      e.preventDefault();
+      const task = document.getElementById("task").value.trim();
+      if (!task) return;
+
+      startTaskBtn.disabled = true;
+      socket.emit('run_task', {task: task});
+    });
+
+    // 连接状态处理
+    socket.on('connect', function() {
+      console.log('WebSocket 连接已建立');
+      socket.emit('get_browser_status');
+    });
+
+    socket.on('disconnect', function() {
+      console.log('WebSocket 连接已断开');
+      updateBrowserStatus("连接断开", 'danger');
+      enableTaskButton(false);
+    });
+  </script>
+</body>
+</html>
